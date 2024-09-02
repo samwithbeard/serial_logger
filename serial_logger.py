@@ -7,7 +7,7 @@ import paho.mqtt.client as mqtt
 import os
 import logging
 from configparser import ConfigParser
-logging.basicConfig(filename='/home/pi/myscript.log', level=logging.DEBUG)
+logging.basicConfig(filename='/home/pi/serial_logger.log', level=logging.DEBUG)
 
 # MQTT Configuration
 MQTT_BROKER = '192.168.1.119'  # Replace with your MQTT broker address
@@ -18,12 +18,12 @@ KEY_TO_PRESS = 'space'  # The key to trigger the publish event
 
 
 config = ConfigParser()
-config.read('config.ini')
+config.read('data/config.ini')
 
-db_username = config.get('credentials', 'db_username')
-db_password = config.get('credentials', 'db_password')
+usern = config.get('credentials', 'db_username')
+passw = config.get('credentials', 'db_password')
 
-if db_username and db_password:
+if usern and passw:
     print("Successfully retrieved credentials")
 else:
     print("Failed to retrieve credentials")
@@ -72,7 +72,7 @@ try:
     client = mqtt.Client()
     print("mqtt initialized")
     # Set the username and password
-    client.username_pw_set(user, passw)
+    client.username_pw_set(usern, passw)
 
     # Assign the on_connect and on_message callbacks
     client.on_connect = on_connect
@@ -119,14 +119,14 @@ def pulse1(channel):
     led.on()
     count1 += 1
     print("rpm "+str(int(rpm1))+" "+int(rpm1/100)*"0")
-    send_message("rpm "+str(int(rpm1))+" "+int(rpm1/100)*"0",MQTT_TOPIC_P1)
+    send_message("rpm "+str(int(rpm1))+" "+int(rpm1/100)*"0",MQTT_TOPIC_DATA)
 
 def pulse2(channel):
     global count2
     led.on()
     count2 += 1
     print("rpm "+str(int(rpm2))+" "+int(rpm2/100)*"0")
-    send_message("rpm "+str(int(rpm2))+" "+int(rpm2/100)*"0",MQTT_TOPIC_P2)
+    send_message("rpm "+str(int(rpm2))+" "+int(rpm2/100)*"0",MQTT_TOPIC_DATA)
 
 def buzzz(channel):
     print("BUZZZ"+str(channel))
@@ -150,7 +150,7 @@ try:
     print("waiting for serial messages..")
     while True:
         temp_check()
-        with open('serial_log.txt', 'a') as log_file:
+        with open('data/serial_log.txt', 'a') as log_file:
             while True:
                 line = ser.readline().decode('utf-8').strip()
                 if line:
