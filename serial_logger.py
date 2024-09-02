@@ -18,7 +18,7 @@ KEY_TO_PRESS = 'space'  # The key to trigger the publish event
 
 
 config = ConfigParser()
-config.read('data/config.ini')
+config.read('data\\config.ini')
 
 usern = config.get('credentials', 'db_username')
 passw = config.get('credentials', 'db_password')
@@ -150,7 +150,7 @@ try:
     print("waiting for serial messages..")
     while True:
         temp_check()
-        with open('data/serial_log.txt', 'a') as log_file:
+        with open('data\\serial_log.txt', 'a') as log_file:
             while True:
                 line = ser.readline().decode('utf-8').strip()
                 if line:
