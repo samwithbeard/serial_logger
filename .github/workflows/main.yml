@@ -22,6 +22,8 @@ jobs:
 
     - name: Generate SHA-256 checksum
       run: sudo sha256sum serial_logger.py > serial_logger.py.sha256
+    - name: Show SHA-256 checksum
+      run: sudo sha256sum serial_logger.py
 
     - name: Commit SHA-256 checksum
       run: |
