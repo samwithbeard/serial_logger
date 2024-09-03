@@ -2,6 +2,8 @@ import requests
 import os
 import datetime
 
+#TODO security check integrity and signature of the code
+
 def get_github_file_last_modified(raw_url):
     try:
         # Send a HEAD request to get the headers of the file
