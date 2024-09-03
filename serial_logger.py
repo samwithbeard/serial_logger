@@ -10,7 +10,7 @@ from configparser import ConfigParser
 logging.basicConfig(filename='/home/pi/serial_logger.log', level=logging.DEBUG)
 
 # MQTT Configuration
-MQTT_BROKER = '192.168.1.119'  # Replace with your MQTT broker address
+#MQTT_BROKER = '192.168.1.119'  # Replace with your MQTT broker address
 MQTT_PORT = 1883 #5672 #1883  # Default port for MQTT
 MQTT_TOPIC_DATA = "logger/data"
 MQTT_TOPIC_DEBUG = "logger/debug"
@@ -24,8 +24,9 @@ config.read(config_path)
 
 usern = config.get('credentials', 'db_username')
 passw = config.get('credentials', 'db_password')
+MQTT_BROKER = config.get('credentials', 'MQTT_BROKER')
 
-if usern and passw:
+if usern and passw and MQTT_BROKER:
     print("Successfully retrieved credentials")
 else:
     print("Failed to retrieve credentials")
