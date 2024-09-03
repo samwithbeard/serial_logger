@@ -14,9 +14,6 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
 
-    - name: Check directory 
-      run: ls serial_logger
-
     - name: Check root directory 
       run: ls /
       
