@@ -7,6 +7,7 @@ on:
 
 jobs:
   generate_sha256:
+    if: "!contains(github.event.head_commit.message, 'Add SHA-256 checksum for serial_logger.py')"
     runs-on: ubuntu-latest
 
     steps:
@@ -22,5 +23,5 @@ jobs:
         git config --global user.name 'github-actions[bot]'
         git config --global user.email 'github-actions[bot]@users.noreply.github.com'
         git add serial_logger/serial_logger.py.sha256
-        git commit -m 'Add SHA-256 checksum for script.py'
+        git commit -m 'Add SHA-256 checksum for serial_logger.py'
         git push
