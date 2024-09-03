@@ -16,7 +16,6 @@ MQTT_TOPIC_DATA = "logger/data"
 MQTT_TOPIC_DEBUG = "logger/debug"
 KEY_TO_PRESS = 'space'  # The key to trigger the publish event
 
-
 config = ConfigParser()
 config_path = os.path.join(os.path.dirname(__file__), 'config.ini')
 print(config_path)
