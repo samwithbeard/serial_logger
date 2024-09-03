@@ -99,11 +99,7 @@ sensor1_pin = 20
 sensor2_pin = 21
 buzz_button_pin=5
 led1_pin=6
-#GPIO.setup(sensor1_pin, GPIO.IN)
-#GPIO.setup(sensor2_pin, GPIO.IN)
-#GPIO.setup(buzz_button_pin, GPIO.IN)
-#GPIO.setup(led1_pin, GPIO.OUT)
-#GPIO.output(led1_pin, GPIO.HIGH)
+
 
 sensor1 = Button(sensor1_pin)
 sensor2 = Button(sensor2_pin)
