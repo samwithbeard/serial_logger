@@ -312,6 +312,7 @@ try:
         while True:
             try:
                 now=time.time()
+                client.publish(mqtt_topic_publish, str(my_uuid)+" "+str(now))
                 #Odometrie:
                 telegram = ser.readline().hex()#+" time "+str(now)
                 telegram_header=(telegram[:4])
