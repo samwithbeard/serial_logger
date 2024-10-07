@@ -313,7 +313,7 @@ try:
             try:
                 now=time.time()
                 cpu_temp=log_temperature()
-                client.publish(mqtt_topic_publish, str(my_uuid)+" "+str(now))
+             
                 #Odometrie:
                 telegram = ser.readline().hex()#+" time "+str(now)
                 telegram_header=(telegram[:4])
@@ -330,7 +330,7 @@ try:
                             rad_speed = str(float(int(line[125] + line[126],16))/100)        
                             #print("i1 "+str(int(splitted_line[126],16))+" i2 "+ str(int(splitted_line[127],16)))
                             #print(str(rad_speed))  
-                            client.publish(mqtt_topic_publish,str(UIC_VehicleID)+" time: "+str(now)+" speed: "+str(rad_speed)+" cpu temp:"+str(cpu_temp))                     
+                            client.publish(mqtt_topic_publish,str(UIC_VehicleID)+" time: "+str(now)+" speed: "+str(rad_speed))                     
 
                         except Exception as e:
                             rad_speed = 'NAN'        
