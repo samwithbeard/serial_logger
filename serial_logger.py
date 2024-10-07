@@ -8,7 +8,7 @@ import os
 import logging
 from configparser import ConfigParser
 import traceback
-
+print("version 1")
 try:
     logging.basicConfig(filename='/home/pi/serial_logger/data/serial_logger.log', level=logging.DEBUG)
 except:
