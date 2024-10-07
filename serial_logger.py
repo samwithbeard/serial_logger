@@ -328,7 +328,7 @@ try:
                             rad_speed = str(float(int(line[125] + line[126],16))/100)        
                             #print("i1 "+str(int(splitted_line[126],16))+" i2 "+ str(int(splitted_line[127],16)))
                             #print(str(rad_speed))  
-                            client.publish(str(UIC_VehicleID)+" speed: "+str(rad_speed),mqtt_topic_test_publish)                     
+                            client.publish(str(UIC_VehicleID)+" time: "+str(now)+" speed: "+str(rad_speed),mqtt_topic_test_publish)                     
                         except Exception as e:
                             rad_speed = 'NAN'        
                             #print("no radar_speed found")
