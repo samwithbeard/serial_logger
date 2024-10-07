@@ -8,6 +8,8 @@ import os
 import logging
 from configparser import ConfigParser
 import traceback
+import ssl
+import uuid
 
 try:
     logging.basicConfig(filename='/home/pi/serial_logger/data/serial_logger.log', level=logging.DEBUG)
@@ -49,7 +51,6 @@ except ImportError:
     Button = GPIO.button
     LED = GPIO.led
 
-# MQTT Configuration
 
 
 def print_file_md5():
@@ -60,33 +61,117 @@ def print_file_md5():
             md5_hash.update(chunk)
     print(f"MD5 hash of file '{file_path}': {md5_hash.hexdigest()}")
 print_file_md5()
-# mqtt_topic_publish = "logger/data"
-MQTT_TOPIC_DEBUG = "94856500666/ETCS/debug"
-mqtt_port_fahrzeug = 8885
-mqtt_port_intern = 8883
-mqtt_topic_publish = "94856500666/ETCS/test"
-mqtt_topic_subscribe = "94856500666/ETCS/#"
-mqtt_client_id_fahrzeug = "94856500666-ETCS-inte"
-mqtt_client_id_intern = "94856500666-ETCS-inte"
-mqtt_pem_file = "C:/Users/u242381/Downloads/SwissSign RSA TLS DV ICA 2022 - 1.pem"
-mqtt_pem_file_intern = "C:/Users/u242381/Downloads/SBB-CL-B-Issuing-CA.pem"
 
+# read Configuration parameter
 config = ConfigParser()
 config_path = os.path.join(os.path.dirname(__file__), 'config.ini')
 print(config_path)
 config.read(config_path)
 
-usern = config.get('credentials', 'mqtt_username')
-passw = config.get('credentials', 'mqtt_password')
-MQTT_BROKER = config.get('credentials', 'mqtt_broker')
 
-if usern and passw and MQTT_BROKER:
-    print("Successfully retrieved credentials")
+mqtt_user_id = config.get('credentials', 'mqtt_username')
+mqtt_password = config.get('credentials', 'mqtt_password')
+mqtt_broker_intern = config.get('credentials', 'mqtt_broker_intern')
+mqtt_broker_outside = config.get('credentials', 'mqtt_broker_outside')
+# MQTT Configuration
+
+# Generiere eine zufällige UUID
+my_uuid = uuid.uuid1()
+#uic range 94856500666 - 94856500669        
+#uuid       
+UIC_VehicleID="94856500666"
+#mqtt_broker_intern = "mqtt-fzge-int.sbb.ch"   #mqtte-fzge-int.sbb.ch:8885 
+#mqtt_broker_outside = "mqtte-fzge-int.sbb.ch"   #mqtte-fzge-int.sbb.ch:8885 
+mqtt_port_outside = 8885               #8885
+mqtt_port_intern = 8883
+mqtt_topic_publish = UIC_VehicleID+"/ETCS"
+mqtt_topic_subscribe = "+/ETCS/#"
+mqtt_client_id_fahrzeug = UIC_VehicleID+"-ETCS-inte" #<uic>-ETCS-inte
+mqtt_topic_test_publish=mqtt_topic_publish+"/test"
+mqtt_client_id_intern = "s-ETCS-consumer-inte-"+str(my_uuid) #s-ETCS-consumer-inte-<uuid>
+mqtt_user_id="ETCS_PoC-inte"
+mqtt_pem_file_intern = "/home/pi/serial_logger/config/SBB-CL-B-Issuing-CA.pem"
+mqtt_pem_file_outside = "/home/pi/serial_logger/config/SwissSign RSA TLS DV ICA 2022 - 1.pem" #C:\Users\u242381\OneDrive - SBB\Dokumente\visual code\repos\serial logger
+#name       #port       #datei                                  #valid
+#SBB signed	8883, 8886	SBB-CL-B-Issuing-CA.pem	                27.09.2027
+#SwissSign	8885, 8887	SwissSign RSA TLS DV ICA 2022 - 1.pem	29.06.2036
+intern=False
+
+
+def check_pem_file(pem_file):
+    try:
+        context = ssl.create_default_context()
+        context.load_verify_locations(cafile=pem_file)
+        return True
+    except ssl.SSLError as e:
+        print(f"Error loading PEM file: {str(e)}")
+        return False
+
+is_valid = check_pem_file(mqtt_pem_file_outside)
+if is_valid:
+    print(mqtt_pem_file_outside+" PEM file is valid!")
+
+is_valid = check_pem_file(mqtt_pem_file_intern)
+
+if is_valid:
+    print(mqtt_pem_file_intern+" PEM file is valid!")
+
+def on_connect(client, userdata, flags, rc):
+    print("Connection Return code:", rc)
+    if rc == 0:
+        print("Connected to MQTT broker successfully.")
+        client.subscribe(mqtt_topic_subscribe)
+    elif rc == 1:
+        print("Connection refused: incorrect protocol version.")
+    elif rc == 2:
+        print("Connection refused: invalid client identifier.")
+    elif rc == 3:
+        print("Connection refused: server unavailable.")
+    elif rc == 4:
+        print("Connection refused: bad username or password.")
+    elif rc == 5:
+        print("Connection refused: not authorized.")
+    else:
+        print("Connection refused: unknown reason. Return code:", rc)    
+    
+
+def on_publish(client, userdata, mid):
+    print("Nachricht erfolgreich veröffentlicht")
+
+def on_disconnect(client, userdata, rc):
+    if rc != 0:
+        print("Unerwartete Trennung vom MQTT-Broker "+str(rc))
+
+def on_message(client, userdata, msg):
+    print("Neue Nachricht empfangen: " + msg.topic + " " + str(msg.payload))
+try:
+    if intern:
+        client = mqtt.Client(client_id=mqtt_client_id_intern)    
+    else :
+        client = mqtt.Client(client_id=mqtt_client_id_fahrzeug)    
+except: 
+    print("mqtt connection failed")
+
+# MQTT-Broker mit TLS-Verbindung konfigurieren
+if intern:
+    client.tls_set(ca_certs=mqtt_pem_file_intern, certfile=None, keyfile=None, cert_reqs=ssl.CERT_REQUIRED, tls_version=ssl.PROTOCOL_TLSv1_2, ciphers=None)    
+else :
+    client.tls_set(ca_certs=mqtt_pem_file_outside, certfile=None, keyfile=None, cert_reqs=ssl.CERT_REQUIRED, tls_version=ssl.PROTOCOL_TLSv1_2, ciphers=None)
+
+client.username_pw_set(username=mqtt_user_id, password=mqtt_password)
+client.on_connect = on_connect
+client.on_publish = on_publish
+client.on_disconnect = on_disconnect
+client.on_message = on_message
+timeout=60
+if intern:
+    client.connect(mqtt_broker_intern, mqtt_port_intern, timeout)
 else:
-    print("Failed to retrieve credentials")
-rpm1=0
-rpm2=0
-
+    client.connect(mqtt_broker_outside, mqtt_port_outside, timeout)
+client.loop_start()
+# Testnachricht senden
+client.publish(mqtt_topic_publish, str(my_uuid)+" started")
+# serial configuration
 try:
     ser = serial.Serial('/dev/serial0', 115200, timeout=1)
 except:
@@ -106,62 +191,19 @@ def log_temperature():
     
 
 def temp_check():
-    temp = log_temperature()
-    send_message("logger CPU temp "+str(int(temp)),MQTT_TOPIC_DEBUG)
+    temp = log_temperature()    
+    message=("logger CPU temp "+str(int(temp)))
+    client.publish(mqtt_topic_publish, message)
     print(f"Current CPU temperature: {temp}°C")
     if temp > 80.0:  # Threshold for warning
         print("Warning: CPU temperature is too high! wait..")
         while temp > 82.0:
             temp = log_temperature()
-            send_message("logger CPU too high, having a break..",MQTT_TOPIC_DEBUG)
+            client.publish("logger CPU too high, having a break..",mqtt_topic_test_publish)
             time.sleep(1)  # Log every 10 seconds
-            send_message("..continue",MQTT_TOPIC_DEBUG)
+            client.publish("..continue",mqtt_topic_test_publish)
 
 
-# Callback when connecting to the MQTT broker
-def on_connect(client, userdata, flags, rc):
-    if rc == 0:
-        print("Connected to MQTT Broker!")
-        # Subscribe to the topic once connected
-        client.subscribe(mqtt_topic_publish)
-        client.subscribe(MQTT_TOPIC_DEBUG)
-    else:
-        print("Failed to connect, return code %d\n", rc)
-
-# Callback for when a message is received
-def on_message(client, userdata, msg):
-    print(f"Received message: '{msg.payload.decode()}' on topic '{msg.topic}'")
-
-
-try:
-    # Create an MQTT client instance
-    client = mqtt.Client()
-    print("mqtt initialized")
-    # Set the username and password
-    client.username_pw_set(usern, passw)
-
-    # Assign the on_connect and on_message callbacks
-    client.on_connect = on_connect
-    client.on_message = on_message
-
-    # Connect to the MQTT broker
-    client.connect(MQTT_BROKER, mqtt_port_fahrzeug, 60)
-
-    # Start the MQTT client loop in a separate thread
-    client.loop_start()
-    print("mqtt running")
-except:
-    print("mqtt not available")
-
-def send_message(message="activated",TOPIC=mqtt_topic_publish):
-        client.publish(TOPIC, message)
-        print(f"Published message: '{message}' to topic: '{TOPIC}'")
-
-
-
-# Variables to count pulses
-count1 = 0
-count2 = 0
 
 def parse_ICN_line(line):
     frame={}
@@ -284,7 +326,8 @@ try:
                         try:
                             rad_speed = str(float(int(line[125] + line[126],16))/100)        
                             #print("i1 "+str(int(splitted_line[126],16))+" i2 "+ str(int(splitted_line[127],16)))
-                            #print(str(rad_speed))                       
+                            #print(str(rad_speed))  
+                            client.publish(str(UIC_VehicleID)+" speed: "+str(rad_speed),mqtt_topic_test_publish)                     
                         except Exception as e:
                             rad_speed = 'NAN'        
                             #print("no radar_speed found")
