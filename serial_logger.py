@@ -60,7 +60,8 @@ def print_file_md5():
         while chunk := file.read(4096):
             md5_hash.update(chunk)
     print(f"MD5 hash of file '{file_path}': {md5_hash.hexdigest()}")
-print_file_md5()
+    return md5_hash
+md5_hash=print_file_md5()
 
 # read Configuration parameter
 config = ConfigParser()
@@ -170,7 +171,7 @@ else:
     client.connect(mqtt_broker_outside, mqtt_port_outside, timeout)
 client.loop_start()
 # Testnachricht senden
-client.publish(mqtt_topic_publish, str(my_uuid)+" started")
+client.publish(mqtt_topic_publish, str(my_uuid)+" started"+" hash"+str(md5_hash))
 # serial configuration
 try:
     ser = serial.Serial('/dev/serial0', 115200, timeout=1)
