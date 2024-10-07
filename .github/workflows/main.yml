@@ -14,14 +14,21 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
 
+    - name: Check directory 
+      run: ls 
+      
+    - name: Ensure directory exists
+      run: mkdir -p serial_logger
+
     - name: Generate SHA-256 checksum
-      run: |
-        sha256sum serial_logger/serial_logger.py > serial_logger/serial_logger.py.sha256
+      run: sudo sha256sum serial_logger.py > serial_logger.py.sha256
+    - name: Show SHA-256 checksum
+      run: sudo sha256sum serial_logger.py
 
     - name: Commit SHA-256 checksum
       run: |
-        git config --global user.name 'github-actions[bot]'
-        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-        git add serial_logger/serial_logger.py.sha256
-        git commit -m 'Add SHA-256 checksum for serial_logger.py'
-        git push
+        sudo git config --global user.name 'github-actions[bot]'
+        sudo git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+        sudo git add serial_logger.py.sha256
+        sudo git commit -m 'Add SHA-256 checksum for serial_logger.py'
+        sudo git push
