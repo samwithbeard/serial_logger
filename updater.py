@@ -11,9 +11,11 @@ def get_github_file_last_modified(raw_url):
         if response.status_code == 200:
             # Get the Last-Modified header
             last_modified_str = response.headers.get('Last-Modified')
+            print(f"last modified date on git: {last_modified}")
             if last_modified_str:
                 # Convert the Last-Modified string to a datetime object
                 last_modified = datetime.datetime.strptime(last_modified_str, '%a, %d %b %Y %H:%M:%S %Z')
+                
                 return last_modified
     except Exception as e:
         print(f"An error occurred while fetching the last modified date: {e}")
@@ -32,6 +34,7 @@ def print_file_md5(path):
 def update_script_if_newer(raw_url, local_path):
     # Get the last modified date of the file on GitHub
     github_last_modified = get_github_file_last_modified(raw_url)
+    
     if github_last_modified:
         print(f"GitHub file last modified date: {github_last_modified}")
 
@@ -45,6 +48,8 @@ def update_script_if_newer(raw_url, local_path):
             if local_last_modified >= github_last_modified:
                 print("Local file is up-to-date. No need to update.")
                 return
+        else:
+            print("local path"+str(local_path)+" does not exist")
 
     # If local file does not exist or is older, download and update it
     try:
@@ -60,7 +65,18 @@ def update_script_if_newer(raw_url, local_path):
 
 
 raw_url = "https://raw.githubusercontent.com/samwithbeard/serial_logger/main/serial_logger.py"
-local_path = "/home/pi/serial_logger/serial_logger.py"
+
+import platform
+local_path = "serial_logger.py"
+if platform.system() == "Linux":
+    print("Running on Linux")
+    local_path = "/home/pi/serial_logger/serial_logger.py"
+elif platform.system() == "Windows":
+    print("Running on Windows")
+    local_path = "C:/Users/u242381/OneDrive - SBB/Desktop/serial_logger.py"
+else:
+    print("Unknown operating system")
+
 
 md5_old=print_file_md5(local_path)
 update_script_if_newer(raw_url, local_path)

@@ -74,6 +74,7 @@ mqtt_user_id = config.get('credentials', 'mqtt_username')
 mqtt_password = config.get('credentials', 'mqtt_password')
 mqtt_broker_intern = config.get('credentials', 'mqtt_broker_intern')
 mqtt_broker_outside = config.get('credentials', 'mqtt_broker_outside')
+
 # MQTT Configuration
 
 # Generiere eine zufällige UUID
@@ -98,6 +99,10 @@ mqtt_pem_file_outside = "/home/pi/serial_logger/config/SwissSign RSA TLS DV ICA 
 #SwissSign	8885, 8887	SwissSign RSA TLS DV ICA 2022 - 1.pem	29.06.2036
 intern=False
 
+if intern:
+    MQTT_BROKER=mqtt_broker_intern
+else:
+    MQTT_BROKER=mqtt_port_outside
 
 def check_pem_file(pem_file):
     try:
@@ -145,6 +150,19 @@ def on_disconnect(client, userdata, rc):
 
 def on_message(client, userdata, msg):
     print("Neue Nachricht empfangen: " + msg.topic + " " + str(msg.payload))
+
+waiting =True
+while waiting:
+    counter =0
+    t = os.system('ping -c 1 '+ MQTT_BROKER)
+    if t < 1:
+        waiting=False
+        print("broker available")
+    else:
+        counter +=1
+        time.sleep(1)
+        if counter == 100000: # this will prevent an never ending loop, set to the number of tries you think it will require
+            waiting = False
 try:
     if intern:
         client = mqtt.Client(client_id=mqtt_client_id_intern)    
