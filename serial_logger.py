@@ -136,7 +136,7 @@ def on_connect(client, userdata, flags, rc):
     
 
 def on_publish(client, userdata, mid):
-    print("mqtt message published "+userdata)
+    print("mqtt message published "+str(userdata))
 
 def on_disconnect(client, userdata, rc):
     if rc != 0:
