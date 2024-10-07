@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-
+import hashlib
 import serial
 import time
 import paho.mqtt.client as mqtt
@@ -8,7 +8,7 @@ import os
 import logging
 from configparser import ConfigParser
 import traceback
-print("version 1")
+
 try:
     logging.basicConfig(filename='/home/pi/serial_logger/data/serial_logger.log', level=logging.DEBUG)
 except:
@@ -51,6 +51,15 @@ except ImportError:
 
 # MQTT Configuration
 
+
+def print_file_md5():
+    file_path = __file__
+    with open(file_path, 'rb') as file:
+        md5_hash = hashlib.md5()
+        while chunk := file.read(4096):
+            md5_hash.update(chunk)
+    print(f"MD5 hash of file '{file_path}': {md5_hash.hexdigest()}")
+print_file_md5()
 # mqtt_topic_publish = "logger/data"
 MQTT_TOPIC_DEBUG = "94856500666/ETCS/debug"
 mqtt_port_fahrzeug = 8885
