@@ -120,7 +120,7 @@ def on_connect(client, userdata, flags, rc):
     print("Connection Return code:", rc)
     if rc == 0:
         print("Connected to MQTT broker successfully.")
-        client.subscribe(mqtt_topic_subscribe)
+        #client.subscribe(mqtt_topic_subscribe)
     elif rc == 1:
         print("Connection refused: incorrect protocol version.")
     elif rc == 2:
@@ -249,7 +249,7 @@ def parse_ICN_line(line):
     
     try:
         status1 = str(int(splitted_line[124],16))       
-        #print("i1 "+str(int(splitted_line[126],16))+" i2 "+ str(int(splitted_line[127],16)))
+        #print("i1 "+str(int(splitted_line[126],16))+" i2 "+ str(int(splitt ed_line[127],16)))
     except Exception as e:
         status1 = 'NAN'        
         print(traceback.format_exc())
