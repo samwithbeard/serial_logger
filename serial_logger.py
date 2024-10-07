@@ -64,7 +64,7 @@ print_file_md5()
 
 # read Configuration parameter
 config = ConfigParser()
-config_path = os.path.join(os.path.dirname(__file__), '/config/config.ini')
+config_path = os.path.join(os.path.dirname(__file__), 'config/config.ini')
 print("config path "+config_path)
 config.read(config_path)
 
