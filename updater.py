@@ -1,7 +1,7 @@
 import requests
 import os
 import datetime
-
+import hashlib
 #TODO security check integrity and signature of the code
 
 def get_github_file_last_modified(raw_url):
@@ -19,6 +19,15 @@ def get_github_file_last_modified(raw_url):
         print(f"An error occurred while fetching the last modified date: {e}")
 
     return None
+def print_file_md5(path):
+    file_path = __file__
+    with open(file_path, 'rb') as file:
+        md5_hash = hashlib.md5()
+        while chunk := file.read(4096):
+            md5_hash.update(chunk)
+    print(f"MD5 hash of file '{file_path}': {md5_hash.hexdigest()}")
+    return md5_hash
+
 
 def update_script_if_newer(raw_url, local_path):
     # Get the last modified date of the file on GitHub
@@ -53,4 +62,6 @@ def update_script_if_newer(raw_url, local_path):
 raw_url = "https://raw.githubusercontent.com/samwithbeard/serial_logger/main/serial_logger.py"
 local_path = "/home/pi/serial_logger/serial_logger.py"
 
+md5_old=print_file_md5(local_path)
 update_script_if_newer(raw_url, local_path)
+md5_new=print_file_md5(local_path)
