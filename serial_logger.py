@@ -317,7 +317,8 @@ try:
                 #Odometrie:
                 telegram = ser.readline().hex()#+" time "+str(now)
                 telegram_header=(telegram[:4])
-                
+                client.publish(str(UIC_VehicleID)+" time: "+str(now)+" cpu temp:"+str(cpu_temp),mqtt_topic_test_publish)                     
+                        
                 print(telegram_header+"\t "+str(len(telegram)))
                 if telegram_header == "1a6b":
                     lines=telegram.split("1b0244") #1b031b0244
@@ -330,6 +331,7 @@ try:
                             #print("i1 "+str(int(splitted_line[126],16))+" i2 "+ str(int(splitted_line[127],16)))
                             #print(str(rad_speed))  
                             client.publish(str(UIC_VehicleID)+" time: "+str(now)+" speed: "+str(rad_speed)+" cpu temp:"+str(cpu_temp),mqtt_topic_test_publish)                     
+
                         except Exception as e:
                             rad_speed = 'NAN'        
                             #print("no radar_speed found")
