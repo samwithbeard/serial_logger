@@ -136,7 +136,7 @@ def on_connect(client, userdata, flags, rc):
     
 
 def on_publish(client, userdata, mid):
-    print("mqtt message published "+str(userdata))
+    print("mqtt message published ")
 
 def on_disconnect(client, userdata, rc):
     if rc != 0:
@@ -144,6 +144,10 @@ def on_disconnect(client, userdata, rc):
 
 def on_message(client, userdata, msg):
     print("Neue Nachricht empfangen: " + msg.topic + " " + str(msg.payload))
+
+def send_messages(topic, message):
+    client.publish(topic, message)
+    print("message sent "+str(message))
 
 waiting =True
 while waiting:
@@ -183,7 +187,9 @@ else:
     client.connect(mqtt_broker_outside, mqtt_port_outside, timeout)
 client.loop_start()
 # Testnachricht senden
-client.publish(mqtt_topic_publish, str(my_uuid)+" started"+" hash"+str(md5_hash))
+message= str(my_uuid)+" started"+" hash"+str(md5_hash)
+send_messages(mqtt_topic_publish,message)
+
 # serial configuration
 try:
     ser = serial.Serial('/dev/serial0', 115200, timeout=1)
@@ -206,15 +212,18 @@ def log_temperature():
 def temp_check():
     temp = log_temperature()    
     message=("logger CPU temp "+str(int(temp)))
-    client.publish(mqtt_topic_publish, message)
+    send_messages(mqtt_topic_publish, message)
+    
     print(f"Current CPU temperature: {temp}°C")
     if temp > 80.0:  # Threshold for warning
         print("Warning: CPU temperature is too high! wait..")
         while temp > 82.0:
             temp = log_temperature()
-            client.publish("logger CPU too high, having a break..",mqtt_topic_test_publish)
+            message="logger CPU too high, having a break.."
+            send_messages(mqtt_topic_publish, message)
             time.sleep(1)  # Log every 10 seconds
-            client.publish("..continue",mqtt_topic_test_publish)
+            message="..continue"
+            send_messages(mqtt_topic_publish, message)
 
 
 
@@ -326,8 +335,8 @@ try:
             try:
                 now=time.time()
                 cpu_temp=log_temperature()
-                client.publish(mqtt_topic_publish,str(UIC_VehicleID)+" time: "+str(now)+" cpu temp:"+str(cpu_temp))
-
+                message=(str(UIC_VehicleID)+" time: "+str(now)+" cpu temp:"+str(cpu_temp))
+                send_messages(mqtt_topic_publish, message)
                 #Odometrie:
                 telegram = ser.readline().hex()#+" time "+str(now)
                 telegram_header=(telegram[:4])                                     
@@ -343,8 +352,8 @@ try:
                             rad_speed = str(float(int(line[125] + line[126],16))/100)        
                             #print("i1 "+str(int(splitted_line[126],16))+" i2 "+ str(int(splitted_line[127],16)))
                             #print(str(rad_speed))  
-                            client.publish(mqtt_topic_publish,str(UIC_VehicleID)+" time: "+str(now)+" speed: "+str(rad_speed))                     
-
+                            message=(str(UIC_VehicleID)+" time: "+str(now)+" speed: "+str(rad_speed))                     
+                            send_messages(mqtt_topic_publish, message)
                         except Exception as e:
                             rad_speed = 'NAN'        
                             #print("no radar_speed found")
@@ -363,13 +372,12 @@ try:
             except Exception as e:
                 print(e)
                 message=str(e)+ " "+ traceback.format_exc()
-                client.publish(mqtt_topic_test_publish,str(UIC_VehicleID)+" time: "+str(now)+" exception: "+message)     
-                time.sleep(5)
+                message= str(UIC_VehicleID)+" time: "+str(now)+" exception: "+ message    
+                send_messages(mqtt_topic_publish, message)
+                time.sleep(10)
 
             if telegram:
-                print(telegram)
-    
-        
+                print(telegram)        
 
 except KeyboardInterrupt:
     logging.error('Error occurred', exc_info=True)
