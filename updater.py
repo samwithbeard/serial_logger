@@ -2,8 +2,22 @@ import requests
 import os
 import datetime
 import hashlib
+import time
 #TODO security check integrity and signature of the code
 
+waiting =True
+while waiting:
+    counter =0
+    t = os.system('ping -c 1 www.sbb.ch')
+    if t < 1:
+        waiting=False
+        print("internet available")
+    else:
+        counter +=1
+        time.sleep(1)
+        if counter == 100000: # this will prevent an never ending loop, set to the number of tries you think it will require
+            waiting = False
+time.sleep(30)
 def get_github_file_last_modified(raw_url):
     try:
         # Send a HEAD request to get the headers of the file

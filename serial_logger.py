@@ -45,23 +45,17 @@ class GPIOSimulator:
         self._button_state = state
 
 try:
-    from gpiozero import Button, LED
-except ImportError:
-    GPIO = GPIOSimulator()
-    Button = GPIO.button
-    LED = GPIO.led
-
-
-
-def print_file_md5():
-    file_path = __file__
-    with open(file_path, 'rb') as file:
-        md5_hash = hashlib.md5()
-        while chunk := file.read(4096):
-            md5_hash.update(chunk)
-    print(f"MD5 hash of file '{file_path}': {md5_hash.hexdigest()}")
-    return md5_hash
-md5_hash=print_file_md5()
+    def print_file_md5():
+        file_path = __file__
+        with open(file_path, 'rb') as file:
+            md5_hash = hashlib.md5()
+            while chunk := file.read(4096):
+                md5_hash.update(chunk)
+        print(f"MD5 hash of file '{file_path}': {md5_hash.hexdigest()}")
+        return md5_hash
+    md5_hash=print_file_md5()
+except Exception as e:
+    print("cannot check pem file")
 
 # read Configuration parameter
 config = ConfigParser()
@@ -154,10 +148,10 @@ def on_message(client, userdata, msg):
 waiting =True
 while waiting:
     counter =0
-    t = os.system('ping -c 1 '+ MQTT_BROKER)
+    t = os.system('ping -c 1 www.sbb.ch')
     if t < 1:
         waiting=False
-        print("broker available")
+        print("internet available")
     else:
         counter +=1
         time.sleep(1)
@@ -332,11 +326,11 @@ try:
             try:
                 now=time.time()
                 cpu_temp=log_temperature()
-             
+                client.publish(mqtt_topic_publish,str(UIC_VehicleID)+" time: "+str(now)+" cpu temp:"+str(cpu_temp))
+
                 #Odometrie:
                 telegram = ser.readline().hex()#+" time "+str(now)
-                telegram_header=(telegram[:4])
-                client.publish(mqtt_topic_publish,str(UIC_VehicleID)+" time: "+str(now)+" cpu temp:"+str(cpu_temp))                     
+                telegram_header=(telegram[:4])                                     
                         
                 print(telegram_header+"\t "+str(len(telegram)))
                 if telegram_header == "1a6b":
@@ -368,21 +362,21 @@ try:
 
             except Exception as e:
                 print(e)
-                
+                message=str(e)+ " "+ traceback.format_exc()
+                client.publish(mqtt_topic_test_publish,str(UIC_VehicleID)+" time: "+str(now)+" exception: "+message)     
+                time.sleep(5)
+
             if telegram:
-                #led.on()
-                #print("line "+line)
-                #send_message(line)
-                #led.off()
-                with open(logpath, 'a') as fd:
-                    fd.write(f'\n{telegram}')
-                #log_file.write(line + '\n')
+                print(telegram)
     
         
 
 except KeyboardInterrupt:
     logging.error('Error occurred', exc_info=True)
+    
     print("Measurement stopped by user")
 
 finally:
+    client.publish(mqtt_topic_test_publish,str(UIC_VehicleID)+" time: "+str(now)+" logger stopped ")     
+    client.disconnect   
     print("bye..")
